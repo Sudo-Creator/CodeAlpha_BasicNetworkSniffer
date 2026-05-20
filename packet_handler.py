@@ -2,8 +2,7 @@
 Core packet parsing and handling logic
 """
 
-from scapy.layers.l2 import Ethernet
-from scapy.layers.inet import IP, ICMP, TCP, UDP, Raw
+from scapy.all import IP, ICMP, TCP, UDP, Raw, Ether
 from utils import get_protocol_name, get_timestamp, format_bytes
 
 class PacketHandler:
@@ -28,7 +27,7 @@ class PacketHandler:
         }
         
         # Parse Ethernet layer (MAC addresses)
-        if packet.haslayer(Ethernet):
+        if packet.haslayer(Ether):
             info = self.parse_ethernet(packet, info)
         
         # Parse IP layer
@@ -57,11 +56,12 @@ class PacketHandler:
     def parse_ethernet(self, packet, info):
         """Extract MAC addresses from Ethernet layer"""
         try:
-            eth = packet[Ethernet]
+            eth = packet[Ether]
             info['src_mac'] = eth.src
             info['dst_mac'] = eth.dst
-        except Exception as e:
-            print(f"Error parsing Ethernet: {e}")
+        except Exception:
+            # MAC addresses may not be available on all interfaces
+            pass
         
         return info
     
@@ -73,8 +73,8 @@ class PacketHandler:
             info['dst_ip'] = ip_layer.dst
             info['ttl'] = ip_layer.ttl
             info['protocol'] = get_protocol_name(ip_layer.proto)
-        except Exception as e:
-            print(f"Error parsing IP: {e}")
+        except Exception:
+            pass
         
         return info
     
@@ -86,8 +86,8 @@ class PacketHandler:
             info['dst_port'] = tcp_layer.dport
             info['flags'] = str(tcp_layer.flags)
             info['protocol'] = 'TCP'
-        except Exception as e:
-            print(f"Error parsing TCP: {e}")
+        except Exception:
+            pass
         
         return info
     
@@ -99,8 +99,8 @@ class PacketHandler:
             info['dst_port'] = udp_layer.dport
             info['udp_len'] = udp_layer.len
             info['protocol'] = 'UDP'
-        except Exception as e:
-            print(f"Error parsing UDP: {e}")
+        except Exception:
+            pass
         
         return info
     
@@ -111,8 +111,8 @@ class PacketHandler:
             info['icmp_type'] = icmp_layer.type
             info['icmp_code'] = icmp_layer.code
             info['protocol'] = 'ICMP'
-        except Exception as e:
-            print(f"Error parsing ICMP: {e}")
+        except Exception:
+            pass
         
         return info
     
@@ -122,7 +122,7 @@ class PacketHandler:
             if packet.haslayer(Raw):
                 raw_load = packet[Raw].load
                 info['payload'] = format_bytes(raw_load, max_length=50)
-        except Exception as e:
-            print(f"Error parsing payload: {e}")
+        except Exception:
+            pass
         
         return info
