@@ -36,55 +36,55 @@ pip install -r requirements.txt
 ### Basic Usage
 ```bash
 # Sniff all traffic on default interface
-sudo python sniffer.py
+sudo python3 sniffer.py
 
 # Sniff on specific interface
-sudo python sniffer.py -i eth0
+sudo python3 sniffer.py -i eth0
 
 # List available interfaces
-sudo python sniffer.py --list-interfaces
+sudo python3 sniffer.py --list-interfaces
 ```
 
 ### Advanced Filtering
 ```bash
 # Capture TCP traffic only
-sudo python sniffer.py -f "tcp"
+sudo python3 sniffer.py -f "tcp"
 
 # Capture UDP traffic only
-sudo python sniffer.py -f "udp"
+sudo python3 sniffer.py -f "udp"
 
 # Capture ICMP (ping) traffic
-sudo python sniffer.py -f "icmp"
+sudo python3 sniffer.py -f "icmp"
 
 # Capture HTTP traffic on port 80
-sudo python sniffer.py -f "tcp port 80"
+sudo python3 sniffer.py -f "tcp port 80"
 
 # Capture HTTPS traffic on port 443
-sudo python sniffer.py -f "tcp port 443"
+sudo python3 sniffer.py -f "tcp port 443"
 
 # Capture DNS traffic on port 53
-sudo python sniffer.py -f "udp port 53"
+sudo python3 sniffer.py -f "udp port 53"
 ```
 
 ### Packet Limiting
 ```bash
 # Capture only 10 packets
-sudo python sniffer.py -c 10
+sudo python3 sniffer.py -c 10
 
 # Capture 100 TCP packets
-sudo python sniffer.py -f "tcp" -c 100
+sudo python3 sniffer.py -f "tcp" -c 100
 
 # Capture 50 packets with verbose output
-sudo python sniffer.py -c 50 -v
+sudo python3 sniffer.py -c 50 -v
 ```
 
 ### Verbose Mode
 ```bash
 # Show packet payloads
-sudo python sniffer.py -v
+sudo python3 sniffer.py -v
 
 # Combine all options
-sudo python sniffer.py -i eth0 -f "tcp port 80" -c 20 -v
+sudo python3 sniffer.py -i eth0 -f "tcp port 80" -c 20 -v
 ```
 
 ## 📊 Output Example
@@ -159,7 +159,7 @@ CodeAlpha_BasicNetworkSniffer/
 ### Test on Loopback Interface
 ```bash
 # Terminal 1: Start sniffer on loopback
-sudo python sniffer.py -i lo -f "tcp port 8000" -v
+sudo python3 sniffer.py -i lo -f "tcp port 8000" -v
 
 # Terminal 2: Make a request
 curl http://localhost:8000
@@ -168,7 +168,7 @@ curl http://localhost:8000
 ### Test with Ping
 ```bash
 # Terminal 1: Capture ICMP
-sudo python sniffer.py -f "icmp"
+sudo python3 sniffer.py -f "icmp"
 
 # Terminal 2: Send ping
 ping 8.8.8.8
@@ -177,7 +177,7 @@ ping 8.8.8.8
 ### Test with DNS
 ```bash
 # Terminal 1: Capture DNS
-sudo python sniffer.py -f "udp port 53"
+sudo python3 sniffer.py -f "udp port 53"
 
 # Terminal 2: Resolve domain
 nslookup google.com
@@ -215,7 +215,7 @@ Error: sniffer.py requires root/administrator privileges!
 ```
 **Solution**: Run with `sudo`
 ```bash
-sudo python sniffer.py
+sudo python3 sniffer.py
 ```
 
 ### Interface Not Found
@@ -225,23 +225,13 @@ Available interfaces: lo, wlan0
 ```
 **Solution**: Use `--list-interfaces` to see available options
 ```bash
-sudo python sniffer.py --list-interfaces
+sudo python3 sniffer.py --list-interfaces
 ```
 
 ### No Packets Captured
 - Check your filter syntax (e.g., `"tcp port 80"`)
 - Ensure the interface is active and has traffic
-- Try without filters: `sudo python sniffer.py`
-
-## 📚 Learning Outcomes
-
-After completing this project, you'll understand:
-- How network packets are structured
-- The OSI model and packet layers
-- TCP/IP protocol fundamentals
-- How to capture and analyze live network traffic
-- BPF (Berkeley Packet Filter) syntax
-- Python networking libraries
+- Try without filters: `sudo python3 sniffer.py`
 
 ## 📄 License
 
