@@ -1,7 +1,6 @@
 """
 Display formatting for network sniffer output
 """
-
 from colorama import Fore, Style, init
 from utils import format_flags
 
@@ -12,10 +11,11 @@ class Display:
     """Handles all output formatting and display"""
     
     PROTOCOL_COLORS = {
-        "TCP": Fore.GREEN,
-        "UDP": Fore.YELLOW,
-        "ICMP": Fore.CYAN,
-        "IPv6": Fore.MAGENTA,
+        "TCP":   Fore.GREEN,
+        "UDP":   Fore.YELLOW,
+        "ICMP":  Fore.CYAN,
+        "ARP":   Fore.RED,
+        "IPv6":  Fore.MAGENTA,
         "Other": Fore.WHITE,
     }
     
@@ -36,15 +36,16 @@ class Display:
         self.packet_count += 1
         
         timestamp = info_dict.get('timestamp', '')
-        protocol = info_dict.get('protocol', 'Unknown')
-        src_ip = info_dict.get('src_ip', 'N/A')
-        dst_ip = info_dict.get('dst_ip', 'N/A')
-        src_port = info_dict.get('src_port', '')
-        dst_port = info_dict.get('dst_port', '')
-        flags = info_dict.get('flags', '')
-        payload = info_dict.get('payload', '')
-        src_mac = info_dict.get('src_mac', 'N/A')
-        dst_mac = info_dict.get('dst_mac', 'N/A')
+        protocol  = info_dict.get('protocol', 'Unknown')
+        src_ip    = info_dict.get('src_ip', 'N/A')
+        dst_ip    = info_dict.get('dst_ip', 'N/A')
+        src_port  = info_dict.get('src_port', '')
+        dst_port  = info_dict.get('dst_port', '')
+        flags     = info_dict.get('flags', '')
+        payload   = info_dict.get('payload', '')
+        src_mac   = info_dict.get('src_mac', 'N/A')
+        dst_mac   = info_dict.get('dst_mac', 'N/A')
+        arp_op    = info_dict.get('arp_op', '')
         
         color = self.PROTOCOL_COLORS.get(protocol, Fore.WHITE)
         
@@ -59,6 +60,10 @@ class Display:
             print(f"  {Fore.LIGHTBLUE_EX}IP: {src_ip}:{src_port} → {dst_ip}:{dst_port}{Style.RESET_ALL}")
         else:
             print(f"  {Fore.LIGHTBLUE_EX}IP: {src_ip} → {dst_ip}{Style.RESET_ALL}")
+        
+        # Print ARP operation if present
+        if arp_op:
+            print(f"  {Fore.RED}Operation: {arp_op}{Style.RESET_ALL}")
         
         # Print TCP flags if present
         if flags:

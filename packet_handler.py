@@ -1,7 +1,7 @@
 """
 Core packet parsing and handling logic
 """
-from scapy.all import IP, IPv6, ICMP, TCP, UDP, Raw, Ether
+from scapy.all import IP, IPv6, ICMP, TCP, UDP, ARP, Raw, Ether
 from utils import get_protocol_name, get_timestamp, format_bytes
 
 class PacketHandler:
@@ -23,6 +23,7 @@ class PacketHandler:
             'payload': '',
             'src_mac': 'N/A',
             'dst_mac': 'N/A',
+            'arp_op': '',
         }
         
         # Parse Ethernet layer (MAC addresses)
@@ -56,6 +57,10 @@ class PacketHandler:
             # Parse UDP layer
             elif packet.haslayer(UDP):
                 info = self.parse_udp(packet, info)
+        
+        # Parse ARP layer
+        elif packet.haslayer(ARP):
+            info = self.parse_arp(packet, info)
         
         # Parse payload
         if packet.haslayer(Raw):
@@ -95,6 +100,19 @@ class PacketHandler:
             info['src_ip'] = ipv6_layer.src
             info['dst_ip'] = ipv6_layer.dst
             info['protocol'] = 'IPv6'
+        except Exception:
+            pass
+        
+        return info
+    
+    def parse_arp(self, packet, info):
+        """Extract source/destination IPs and operation type from ARP layer"""
+        try:
+            arp_layer = packet[ARP]
+            info['src_ip'] = arp_layer.psrc
+            info['dst_ip'] = arp_layer.pdst
+            info['protocol'] = 'ARP'
+            info['arp_op'] = 'Request' if arp_layer.op == 1 else 'Reply'
         except Exception:
             pass
         
