@@ -11,34 +11,37 @@ from display import Display
 
 class Sniffer:
     """Orchestrator class for packet sniffing"""
-    
-    def __init__(self, interface='eth0', filter_str='', count=0, verbose=False):
+
+    def __init__(self, interface='eth0', filter_str='', count=0, verbose=False, resolve=False):
         """
         Initialize sniffer with configuration
-        
+
         Args:
-            interface: Network interface to sniff on
+            interface:  Network interface to sniff on
             filter_str: BPF filter string (e.g., "tcp port 80")
-            count: Number of packets to capture (0 = infinite)
-            verbose: Show raw payloads
+            count:      Number of packets to capture (0 = infinite)
+            verbose:    Show raw payloads
+            resolve:    Resolve IP addresses to hostnames via reverse DNS
         """
-        self.interface = interface
+        self.interface  = interface
         self.filter_str = filter_str
-        self.count = count
-        self.verbose = verbose
-        self.display = Display(verbose=verbose)
-        self.packet_handler = PacketHandler(self.display)
-    
+        self.count      = count
+        self.verbose    = verbose
+        self.resolve    = resolve
+        self.display    = Display(verbose=verbose)
+        self.packet_handler = PacketHandler(self.display, resolve=resolve)
+
     def start(self):
         """Start packet capture"""
         try:
             self.display.print_header()
-            
+
             print(f"Interface: {self.interface}")
             print(f"Filter: {self.filter_str if self.filter_str else 'All traffic'}")
             print(f"Count: {self.count if self.count > 0 else 'Unlimited'}")
-            print(f"Verbose: {self.verbose}\n")
-            
+            print(f"Verbose: {self.verbose}")
+            print(f"Resolve: {self.resolve}\n")
+
             # Start sniffing
             sniff(
                 iface=self.interface,
@@ -47,7 +50,7 @@ class Sniffer:
                 count=self.count if self.count > 0 else 0,
                 store=False
             )
-            
+
         except KeyboardInterrupt:
             print("\n")
             self.display.print_footer()
@@ -64,6 +67,7 @@ class Sniffer:
             print(f"\n❌ Error: {e}")
             sys.exit(1)
 
+
 def get_available_interfaces():
     """Get list of available network interfaces"""
     try:
@@ -74,6 +78,7 @@ def get_available_interfaces():
     except Exception:
         return ['eth0', 'wlan0', 'lo']
 
+
 def print_welcome():
     """Print welcome banner"""
     print("""
@@ -83,12 +88,13 @@ def print_welcome():
 ╚════════════════════════════════════════════════════════════════╝
 """)
 
+
 def main():
     """Parse CLI arguments and start sniffer"""
-    
+
     interfaces = get_available_interfaces()
     default_interface = interfaces[0] if interfaces else 'eth0'
-    
+
     parser = argparse.ArgumentParser(
         prog='Network Sniffer',
         description='🔍 Capture and analyze network traffic packets in real-time',
@@ -129,6 +135,10 @@ VERBOSE MODE (Show Payloads):
   sudo python3 sniffer.py -v                 # Show raw data
   sudo python3 sniffer.py -f "tcp" -v -c 20  # TCP with payloads
 
+RESOLVE MODE (Hostname Resolution):
+  sudo python3 sniffer.py -r                 # Resolve IPs to hostnames
+  sudo python3 sniffer.py -f "icmp" -r -c 5  # ICMP with hostnames
+
 COMPLEX FILTERS:
   sudo python3 sniffer.py -f "tcp and port 80"
   sudo python3 sniffer.py -f "not arp"
@@ -137,7 +147,7 @@ COMPLEX FILTERS:
 
 FULL EXAMPLES:
   sudo python3 sniffer.py -i eth0 -f "tcp port 443" -c 50 -v
-  sudo python3 sniffer.py -i wlan0 -f "icmp" -c 10
+  sudo python3 sniffer.py -i eth1 -f "icmp" -c 5 -r
   sudo python3 sniffer.py -f "udp port 53" -v
 
 ╔══════════════════════════════════════════════════════════════════╗
@@ -156,25 +166,26 @@ FULL EXAMPLES:
   ✓ ICMP - Type, code (ping requests/replies)
   ✓ ARP  - Address resolution protocol
   ✓ IPv4 - Source/destination IPs, TTL
+  ✓ IPv6 - Source/destination IPs
 
 Press Ctrl+C to stop capturing packets.
         '''
     )
-    
+
     parser.add_argument(
         '-i', '--interface',
         default=default_interface,
         metavar='IFACE',
         help=f'Network interface to sniff on (default: {default_interface})'
     )
-    
+
     parser.add_argument(
         '-f', '--filter',
         default='',
         metavar='FILTER',
         help='BPF filter string (e.g., "tcp", "udp port 53", "icmp", "not arp")'
     )
-    
+
     parser.add_argument(
         '-c', '--count',
         type=int,
@@ -182,27 +193,33 @@ Press Ctrl+C to stop capturing packets.
         metavar='NUM',
         help='Number of packets to capture (0 = infinite, default: 0)'
     )
-    
+
     parser.add_argument(
         '-v', '--verbose',
         action='store_true',
         help='Show raw packet payloads (verbose output)'
     )
-    
+
+    parser.add_argument(
+        '-r', '--resolve',
+        action='store_true',
+        help='Resolve IP addresses to hostnames via reverse DNS lookup'
+    )
+
     parser.add_argument(
         '--list-interfaces',
         action='store_true',
         help='List available network interfaces and exit'
     )
-    
+
     parser.add_argument(
         '--version',
         action='version',
         version='Network Sniffer v1.0 (CodeAlpha Internship)'
     )
-    
+
     args = parser.parse_args()
-    
+
     # Handle list-interfaces
     if args.list_interfaces:
         print_welcome()
@@ -212,7 +229,7 @@ Press Ctrl+C to stop capturing packets.
         print()
         print("Usage: sudo python3 sniffer.py -i <interface_name>\n")
         return
-    
+
     # Validate interface
     if args.interface not in interfaces:
         print(f"\n❌ Error: Interface '{args.interface}' not found!")
@@ -220,23 +237,25 @@ Press Ctrl+C to stop capturing packets.
         print(f"\nUse: sudo python3 sniffer.py --list-interfaces")
         print(f"Or:  sudo python3 sniffer.py -i <interface_name>\n")
         sys.exit(1)
-    
+
     # Check if running as root
     if os.geteuid() != 0:
         print("\n⚠️  Warning: This program should be run with root privileges!")
         print("Run with: sudo python3 sniffer.py [options]\n")
-    
+
     print_welcome()
-    
+
     # Create and start sniffer
     sniffer = Sniffer(
         interface=args.interface,
         filter_str=args.filter,
         count=args.count,
-        verbose=args.verbose
+        verbose=args.verbose,
+        resolve=args.resolve,
     )
-    
+
     sniffer.start()
+
 
 if __name__ == '__main__':
     main()
