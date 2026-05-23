@@ -1,8 +1,7 @@
 """
 Core packet parsing and handling logic
 """
-
-from scapy.all import IP, ICMP, TCP, UDP, Raw, Ether
+from scapy.all import IP, IPv6, ICMP, TCP, UDP, Raw, Ether
 from utils import get_protocol_name, get_timestamp, format_bytes
 
 class PacketHandler:
@@ -30,7 +29,7 @@ class PacketHandler:
         if packet.haslayer(Ether):
             info = self.parse_ethernet(packet, info)
         
-        # Parse IP layer
+        # Parse IP layer (IPv4)
         if packet.haslayer(IP):
             info = self.parse_ip(packet, info)
             
@@ -46,6 +45,18 @@ class PacketHandler:
             elif packet.haslayer(ICMP):
                 info = self.parse_icmp(packet, info)
         
+        # Parse IPv6 layer
+        elif packet.haslayer(IPv6):
+            info = self.parse_ipv6(packet, info)
+            
+            # Parse TCP layer
+            if packet.haslayer(TCP):
+                info = self.parse_tcp(packet, info)
+            
+            # Parse UDP layer
+            elif packet.haslayer(UDP):
+                info = self.parse_udp(packet, info)
+        
         # Parse payload
         if packet.haslayer(Raw):
             info = self.parse_payload(packet, info)
@@ -60,7 +71,6 @@ class PacketHandler:
             info['src_mac'] = eth.src
             info['dst_mac'] = eth.dst
         except Exception:
-            # MAC addresses may not be available on all interfaces
             pass
         
         return info
@@ -73,6 +83,18 @@ class PacketHandler:
             info['dst_ip'] = ip_layer.dst
             info['ttl'] = ip_layer.ttl
             info['protocol'] = get_protocol_name(ip_layer.proto)
+        except Exception:
+            pass
+        
+        return info
+    
+    def parse_ipv6(self, packet, info):
+        """Extract source IP, destination IP from IPv6 layer"""
+        try:
+            ipv6_layer = packet[IPv6]
+            info['src_ip'] = ipv6_layer.src
+            info['dst_ip'] = ipv6_layer.dst
+            info['protocol'] = 'IPv6'
         except Exception:
             pass
         

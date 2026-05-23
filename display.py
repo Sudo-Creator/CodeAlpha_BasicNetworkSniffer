@@ -3,7 +3,7 @@ Display formatting for network sniffer output
 """
 
 from colorama import Fore, Style, init
-from utils import get_timestamp, format_bytes, format_flags
+from utils import format_flags
 
 # Initialize colorama for cross-platform colored output
 init(autoreset=True)
